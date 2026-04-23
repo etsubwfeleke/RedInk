@@ -371,16 +371,3 @@ Contributions are welcome! Please follow these guidelines:
 ---
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Technology Stack
-
-- **LangChain & LangGraph**: For the agent orchestration framework
-- **Anthropic & OpenAI**: For providing powerful LLM APIs
-- **FastAPI**: For the elegant async Python framework
-- **React & Tailwind**: For the modern frontend stack
-
----
