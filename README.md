@@ -6,6 +6,13 @@
 
 **[Try RedInk Live](https://redink-frontend-25mj4tmsxa-uc.a.run.app/)**
 
+## Video Demo
+
+<video src="./output.mp4" controls width="900">
+  Your browser does not support the video tag.
+</video>
+
+
 An AI-powered grading system that uses multiple specialized agents to evaluate student work with human-in-the-loop oversight. RedInk combines the analytical capabilities of large language models with the critical judgment of teaching assistants to deliver consistent, constructive feedback at scale.
 
 ---
