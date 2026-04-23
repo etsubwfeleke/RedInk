@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-scrolling: touch;
+  background-color: #faf8f3;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 31px,
+      rgba(200, 180, 150, 0.15) 31px,
+      rgba(200, 180, 150, 0.15) 32px
+    ),
+    linear-gradient(
+      90deg,
+      #faf8f3 0%,
+      #f5f2ed 100%
+    );
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Paper texture */
+.paper-bg {
+  background-color: #fdfcfa;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 31px,
+      rgba(200, 180, 150, 0.2) 31px,
+      rgba(200, 180, 150, 0.2) 32px
+    );
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Red ink handwriting font */
+.redink-font {
+  font-family: 'Caveat', cursive;
+}

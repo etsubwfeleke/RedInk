@@ -1,0 +1,29 @@
+fastapi
+uvicorn[standard]
+python-multipart
+
+# LangChain ecosystem - let pip resolve versions
+langchain
+langgraph
+langchain-anthropic
+langchain-openai
+langchain-core
+langchain-community
+
+# Pydantic
+pydantic>=2.0,<3.0
+pydantic-settings
+
+# LangSmith
+langsmith
+
+# File processing
+PyPDF2
+python-docx
+markdown
+aiofiles
+
+# Optional utilities
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
