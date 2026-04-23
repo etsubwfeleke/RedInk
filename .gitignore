@@ -1,3 +1,41 @@
+cat >> .gitignore << 'EOF'
+
+# Tests
+tests/
+*.test.js
+*.test.jsx
+*.test.py
+__tests__/
+
+# Coverage
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Environment
+.env
+.env.local
+.env.production
+.env.development
+
+# Build artifacts
+dist/
+build/
+*.pyc
+__pycache__/
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
 # Python
 __pycache__/
 *.py[cod]
@@ -18,6 +56,7 @@ build/
 .env
 .env.local
 .env.*.local
+.env.example
 
 # IDE
 .vscode/
@@ -33,3 +72,27 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+# .gitignore
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/tests
+frontend/node_modules/
+frontend/dist/
+.DS_Store
+*.log
+.env
+api.py
+venv/
+backend/venv/
+frontend/node_modules/
+
+DEPLOYMENT_CHECKLIST.md
+PRESENTATION_OUTLINE.md
+local_test.sh
+setup_environment.sh
+QUICK_START.md
+QUICK_REFERENCE.md
+QUICK_REFERENCE.md
+/Users/yuki/Documents/Wipro/grading-assistant 2/SETUP_GUIDE.md
