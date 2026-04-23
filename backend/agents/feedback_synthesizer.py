@@ -1,7 +1,11 @@
 import json
 from typing import Dict, Any, List
+import logging
 from services.llm_service import LLMService
 from models.schemas import FeedbackItem, HumanReviewedGrade
+
+
+logger = logging.getLogger(__name__)
 
 
 class FeedbackSynthesizerAgent:
@@ -82,6 +86,12 @@ Create encouraging, specific, actionable feedback for each criterion and overall
 Return the structured JSON with feedback."""
         
         try:
+            logger.info(
+                "Starting feedback synthesis for %d reviewed criteria (total %.2f/%.2f)",
+                len(reviewed_grades),
+                total_score,
+                max_total,
+            )
             response = await LLMService.call_llm(
                 config=config,
                 system_prompt=FeedbackSynthesizerAgent.SYSTEM_PROMPT,
@@ -102,6 +112,7 @@ Return the structured JSON with feedback."""
             
             # Convert to Pydantic models
             feedback_items = [FeedbackItem(**f) for f in feedback_dict["feedback_items"]]
+            logger.info("Feedback synthesis complete with %d feedback items", len(feedback_items))
             
             return {
                 **state,
@@ -111,6 +122,7 @@ Return the structured JSON with feedback."""
             }
             
         except Exception as e:
+            logger.exception("Feedback synthesis failed")
             return {
                 **state,
                 "error": f"Feedback synthesis failed: {str(e)}",

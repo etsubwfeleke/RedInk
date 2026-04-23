@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from 'semantic-ui-react';
 
 function Welcome({ onStart }) {
   return (
@@ -33,17 +34,23 @@ function Welcome({ onStart }) {
         {/* Features Grid */}
         <div className="grid grid-cols-3 gap-8 mt-20">
           <div className="paper-bg p-6 rounded-lg">
-            <div className="text-4xl mb-3">🤖</div>
+            <div className="mb-3">
+              <Icon name="sitemap" size="huge" />
+            </div>
             <h3 className="font-semibold text-gray-900 mb-2">AI-Powered</h3>
             <p className="text-sm text-gray-600">Multi-agent system analyzes rubrics and student work</p>
           </div>
           <div className="paper-bg p-6 rounded-lg">
-            <div className="text-4xl mb-3">👤</div>
+            <div className="mb-3">
+              <Icon name="user" size="huge" />
+            </div>
             <h3 className="font-semibold text-gray-900 mb-2">Human Review</h3>
             <p className="text-sm text-gray-600">You have final say on all grades and feedback</p>
           </div>
           <div className="paper-bg p-6 rounded-lg">
-            <div className="text-4xl mb-3">⚡</div>
+            <div className="mb-3">
+              <Icon name="bolt" size="huge" />
+            </div>
             <h3 className="font-semibold text-gray-900 mb-2">Save Time</h3>
             <p className="text-sm text-gray-600">Grade faster without sacrificing quality</p>
           </div>

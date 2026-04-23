@@ -1,11 +1,12 @@
 import React from 'react';
+import { Icon } from 'semantic-ui-react';
 
 function Sidebar({ currentPage, onNavigate }) {
   const navItems = [
-    { id: 'config', label: 'AI Config', icon: '⚙️', description: 'Set up your AI' },
-    { id: 'upload', label: 'Upload', icon: '📁', description: 'Add files' },
-    { id: 'review', label: 'Review', icon: '✏️', description: 'Grade work' },
-    { id: 'publish', label: 'Publish', icon: '📊', description: 'View history' },
+    { id: 'config', label: 'AI Config', icon: 'setting', description: 'Set up your AI' },
+    { id: 'upload', label: 'Course Setup', icon: 'folder open', description: 'Rubric & Golden' },
+    { id: 'grading', label: 'Grade', icon: 'pencil', description: 'Grade students' },
+    { id: 'publish', label: 'History', icon: 'chart bar', description: 'View all grades' },
   ];
 
   return (
@@ -30,7 +31,7 @@ function Sidebar({ currentPage, onNavigate }) {
                 : 'text-gray-700 hover:bg-gray-50 border-2 border-transparent'
             }`}
           >
-            <span className="text-2xl mt-0.5">{item.icon}</span>
+            <Icon name={item.icon} size="large" style={{ marginTop: '0.125rem' }} />
             <div>
               <div className="font-semibold">{item.label}</div>
               <div className="text-xs text-gray-500">{item.description}</div>
@@ -39,7 +40,7 @@ function Sidebar({ currentPage, onNavigate }) {
         ))}
       </nav>
 
-      {/* Bottom decoration - no longer absolute */}
+      {/* Bottom decoration */}
       <div className="mt-8">
         <div className="paper-bg p-4 rounded-lg text-center border-2 border-gray-200">
           <p className="text-xs text-gray-500 mb-1">Powered by</p>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Icon } from 'semantic-ui-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -154,22 +155,22 @@ function FileUpload({ onGradingInitiated }) {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
               {files.rubric && (
-                <p className="mt-1 text-sm text-green-600">✓ {files.rubric.name}</p>
+                <p className="mt-1 text-sm text-green-600 flex items-center gap-1"><Icon name="check circle" size="small" /> {files.rubric.name}</p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Golden Assignment (Optional) <span className="text-gray-500 font-normal">(PDF, DOCX, MD, TXT)</span>
+                Golden Assignment (Optional) <span className="text-gray-500 font-normal">(PDF, DOCX, MD, TXT, PY, IPYNB, JS, JSX, TS, TSX, JAVA, CPP, C, H, CS, RB, GO, RS, SWIFT, KT, PHP, SQL, SH, R, CSS, HTML, JSON)</span>
               </label>
               <input
                 type="file"
-                accept=".pdf,.docx,.doc,.md,.txt"
+                accept=".pdf,.docx,.doc,.md,.txt,.py,.ipynb,.js,.jsx,.ts,.tsx,.java,.cpp,.c,.h,.cs,.rb,.go,.rs,.swift,.kt,.php,.sql,.sh,.r,.css,.html,.json"
                 onChange={(e) => setFiles({ ...files, golden: e.target.files[0] })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
               {files.golden && (
-                <p className="mt-1 text-sm text-green-600">✓ {files.golden.name}</p>
+                <p className="mt-1 text-sm text-green-600 flex items-center gap-1"><Icon name="check circle" size="small" /> {files.golden.name}</p>
               )}
               <p className="mt-1 text-xs text-gray-500">
                 A perfect-score example to set grading standards
@@ -188,7 +189,7 @@ function FileUpload({ onGradingInitiated }) {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
               {files.student && (
-                <p className="mt-1 text-sm text-green-600">✓ {files.student.name}</p>
+                <p className="mt-1 text-sm text-green-600 flex items-center gap-1"><Icon name="check circle" size="small" /> {files.student.name}</p>
               )}
             </div>
           </div>

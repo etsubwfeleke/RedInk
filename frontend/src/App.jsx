@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Welcome from './components/Welcome';
 import Sidebar from './components/Sidebar';
-import AIConfig from './components/AIConfig';
+import AIConfig from './components/AIconfig';
 import UploadPage from './components/UploadPage';
 import ReviewQueue from './components/ReviewQueue';
 import Results from './components/Results';
+import PublishPage from './components/PublishPage';
+import GradingPage from './components/GradingPage';
+import BulkReview from './components/BulkReview';
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -12,12 +15,26 @@ function App() {
   const [aiConfig, setAiConfig] = useState(null);
   const [workflowId, setWorkflowId] = useState(null);
   const [gradingResult, setGradingResult] = useState(null);
+  const [bulkResults, setBulkResults] = useState(null);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+
+
+  useEffect(() => {
+    const saved = localStorage.getItem('redink_config');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setAiConfig(parsed);
+      } catch (e) {
+        console.error('Failed to load saved config');
+      }
+    }
+  }, []);
 
   const handleStart = () => {
     setShowWelcome(false);
     setCurrentPage('config');
   };
-
   const handleConfigSave = (config) => {
     setAiConfig(config);
     setCurrentPage('upload');
@@ -29,20 +46,86 @@ function App() {
     setCurrentPage('review');
   };
 
-  const handleReviewComplete = (result) => {
-    setGradingResult(result);
-    setCurrentPage('results');
+const handleReviewComplete = (result) => {
+  setGradingResult(result);
+  
+  // Save to student history
+  const studentRecord = {
+    name: result.student_name || 'Student ' + (Date.now() % 1000),
+    course: 'Course 1',
+    totalScore: result.total_score,
+    maxScore: result.max_total_score,
+    percentage: result.percentage,
+    grade: getGradeLetter(result.percentage),
+    grades: result.grades,
+    overallComments: result.overall_comments,
+    timestamp: Date.now()
   };
+  
+  // Load existing students
+  const saved = localStorage.getItem('redink_students');
+  const students = saved ? JSON.parse(saved) : [];
+  
+  // Add new student
+  students.push(studentRecord);
+  
+  // Save back
+  localStorage.setItem('redink_students', JSON.stringify(students));
+  
+  setCurrentPage('results');
+};
+
+// Helper function for grade letter
+const getGradeLetter = (percent) => {
+  if (percent >= 90) return 'A';
+  if (percent >= 80) return 'B';
+  if (percent >= 70) return 'C';
+  if (percent >= 60) return 'D';
+  return 'F';
+};
+  
 
   const handleNewGrading = () => {
     setWorkflowId(null);
     setGradingResult(null);
-    setCurrentPage('upload');
-  };
+    setCurrentPage('grading');
+  };  
 
   if (showWelcome) {
     return <Welcome onStart={handleStart} />;
   }
+  const handleBulkGradingInitiated = (data) => {
+  setBulkResults(data);
+  setIsBulkMode(true);
+  setCurrentPage('review');
+};
+
+const handleBulkComplete = (allResults) => {
+  // Save all students to history
+  allResults.forEach(result => {
+    const studentRecord = {
+      name: result.student_name || 'Unknown',
+      course: 'Course 1',
+      totalScore: result.total_score,
+      maxScore: result.max_total_score,
+      percentage: result.percentage,
+      grade: getGradeLetter(result.percentage),
+      grades: result.grades,
+      overallComments: result.overall_comments,
+      timestamp: Date.now()
+    };
+    
+    const saved = localStorage.getItem('redink_students');
+    const students = saved ? JSON.parse(saved) : [];
+    students.push(studentRecord);
+    localStorage.setItem('redink_students', JSON.stringify(students));
+  });
+
+  setBulkResults(null);
+  setIsBulkMode(false);
+  setCurrentPage('publish');
+  alert(`Successfully graded ${allResults.length} students!`);
+};
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -56,15 +139,26 @@ function App() {
         )}
 
         {currentPage === 'upload' && (
-          <UploadPage 
+          <UploadPage onCourseSetup={() => {}} />
+        )}
+
+        {currentPage === 'grading' && (
+          <GradingPage 
             config={aiConfig}
             onGradingInitiated={handleGradingInitiated}
+            onBulkGradingInitiated={handleBulkGradingInitiated}
           />
         )}
 
         {currentPage === 'review' && (
           <>
-            {workflowId ? (
+            {isBulkMode && bulkResults ? (
+              <BulkReview 
+                bulkData={bulkResults}
+                config={aiConfig}
+                onComplete={handleBulkComplete}
+              />
+            ) : workflowId ? (
               <ReviewQueue 
                 workflowId={workflowId}
                 onComplete={handleReviewComplete}
@@ -87,18 +181,18 @@ function App() {
                       </div>
                       <div className="paper-bg p-4 rounded-lg border-2 border-gray-200">
                         <div className="text-3xl mb-2">2️⃣</div>
-                        <p className="font-semibold text-gray-700">Upload Files</p>
+                        <p className="font-semibold text-gray-700">Setup Course</p>
                       </div>
                       <div className="paper-bg p-4 rounded-lg border-2 border-red-300 bg-red-50">
                         <div className="text-3xl mb-2">3️⃣</div>
-                        <p className="font-semibold text-red-700">Review Here</p>
+                        <p className="font-semibold text-red-700">Grade Students</p>
                       </div>
                     </div>
                     <button
-                      onClick={() => setCurrentPage('upload')}
+                      onClick={() => setCurrentPage('grading')}
                       className="mt-8 bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-4 rounded-lg transition-all"
                     >
-                      Go to Upload →
+                      Go to Grading →
                     </button>
                   </div>
                 </div>
@@ -139,53 +233,11 @@ function App() {
         )}
 
         {currentPage === 'publish' && (
-          <div className="max-w-6xl mx-auto p-12">
-            <div className="mb-8">
-              <h2 className="text-5xl font-bold text-red-600 redink-font mb-3">
-                Student History
-              </h2>
-              <p className="text-lg text-gray-600">
-                All graded students will appear here
-              </p>
-            </div>
-
-            <div className="paper-bg rounded-2xl shadow-lg p-16 text-center border-2 border-gray-200">
-              <div className="text-8xl mb-6">📊</div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-4">
-                No Students Graded Yet
-              </h3>
-              <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-                Once you start grading assignments, you'll see a complete history here with student names, grades, and feedback.
-              </p>
-              
-              {/* Preview of what table will look like */}
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-300">
-                  <div className="grid grid-cols-4 gap-4 text-sm font-semibold text-gray-500 mb-3">
-                    <div>Student Name</div>
-                    <div>Grade</div>
-                    <div>Date Graded</div>
-                    <div>Actions</div>
-                  </div>
-                  <div className="text-gray-400 py-8">
-                    <p className="italic">Student records will appear here...</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8">
-                <button
-                  onClick={() => setCurrentPage('upload')}
-                  className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded-lg transition-all"
-                >
-                  Start Grading →
-                </button>
-              </div>
-            </div>
-          </div>
+          <PublishPage />
         )}
       </div>
     </div>
   );
 }
+          
 export default App;

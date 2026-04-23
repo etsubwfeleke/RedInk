@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Icon } from 'semantic-ui-react';
 
 function AIConfig({ onSave }) {
   const [config, setConfig] = useState({
@@ -7,12 +8,40 @@ function AIConfig({ onSave }) {
     model_name: ''
   });
 
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('redink_config');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setConfig(parsed);
+      } catch (e) {
+        console.error('Failed to load saved config');
+      }
+    }
+  }, []);
+
   const handleSave = () => {
     if (!config.api_key) {
       alert('Please enter an API key');
       return;
     }
+    
+    // Save to localStorage
+    localStorage.setItem('redink_config', JSON.stringify(config));
+    
     onSave(config);
+  };
+
+  const handleClear = () => {
+    if (confirm('Clear saved API key?')) {
+      localStorage.removeItem('redink_config');
+      setConfig({
+        llm_provider: 'openai',
+        api_key: '',
+        model_name: ''
+      });
+    }
   };
 
   return (
@@ -30,17 +59,23 @@ function AIConfig({ onSave }) {
       <div className="grid grid-cols-3 gap-6 mb-8">
         {/* Info Cards */}
         <div className="paper-bg p-5 rounded-lg border-l-4 border-red-400">
-          <div className="text-3xl mb-2">🔒</div>
+          <div className="mb-2">
+            <Icon name="lock" size="big" />
+          </div>
           <h4 className="font-semibold text-gray-900 mb-1">Secure</h4>
           <p className="text-sm text-gray-600">API keys never stored</p>
         </div>
         <div className="paper-bg p-5 rounded-lg border-l-4 border-blue-400">
-          <div className="text-3xl mb-2">⚡</div>
+          <div className="mb-2">
+            <Icon name="bolt" size="big" />
+          </div>
           <h4 className="font-semibold text-gray-900 mb-1">Fast</h4>
           <p className="text-sm text-gray-600">Process in seconds</p>
         </div>
         <div className="paper-bg p-5 rounded-lg border-l-4 border-green-400">
-          <div className="text-3xl mb-2">🎯</div>
+          <div className="mb-2">
+            <Icon name="bullseye" size="big" />
+          </div>
           <h4 className="font-semibold text-gray-900 mb-1">Accurate</h4>
           <p className="text-sm text-gray-600">Multi-agent system</p>
         </div>
@@ -53,11 +88,28 @@ function AIConfig({ onSave }) {
             <strong>Note:</strong> You need either an Anthropic API key (for Claude) or OpenAI API key (for GPT models).
           </p>
         </div>
+        {config.api_key && (
+          <div className="mb-6 paper-bg p-4 rounded-lg border-l-4 border-green-400">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon name="check circle" className="text-green-600" />
+                <span className="text-green-800 font-semibold">API Key Saved</span>
+              </div>
+              <button
+                onClick={handleClear}
+                className="text-sm text-red-600 hover:text-red-700 underline"
+              >
+                Clear Key
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* LLM Provider Dropdown */}
         <div>
-          <label className="block text-base font-bold text-gray-800 mb-3">
-            🤖 Load up AI tools
+          <label className="block text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <Icon name="robot" />
+            Load up AI tools
           </label>
           <select
             value={config.llm_provider}
@@ -69,16 +121,17 @@ function AIConfig({ onSave }) {
           </select>
           <p className="mt-2 text-sm text-gray-600">
             {config.llm_provider === 'claude' 
-              ? '✨ Claude excels at nuanced reasoning and following rubrics precisely'
-              : '⚡ GPT models are fast and work well for straightforward grading'
+              ? 'Claude excels at nuanced reasoning and following rubrics precisely'
+              : 'GPT models are fast and work well for straightforward grading'
             }
           </p>
         </div>
 
         {/* API Key */}
         <div>
-          <label className="block text-base font-bold text-gray-800 mb-3">
-            🔑 API Key
+          <label className="block text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <Icon name="key" />
+            API Key
           </label>
           <input
             type="password"
@@ -88,7 +141,7 @@ function AIConfig({ onSave }) {
             className="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg shadow-sm"
           />
           <div className="mt-3 flex items-start gap-2 bg-gray-50 p-3 rounded-lg">
-            <span className="text-lg">💡</span>
+            <Icon name="lightbulb outline" style={{ marginTop: '0.25rem' }} />
             <div className="text-sm text-gray-600">
               <p className="font-semibold mb-1">Where to get your API key:</p>
               <ul className="space-y-1 ml-4 list-disc">
@@ -112,8 +165,9 @@ function AIConfig({ onSave }) {
 
         {/* Model Name */}
         <div>
-          <label className="block text-base font-bold text-gray-800 mb-3">
-            🎯 Model Name <span className="text-sm font-normal text-gray-500">(Optional)</span>
+          <label className="block text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <Icon name="bullseye" />
+            Model Name <span className="text-sm font-normal text-gray-500">(Optional)</span>
           </label>
           <input
             type="text"
@@ -128,22 +182,25 @@ function AIConfig({ onSave }) {
         </div>
 
         {/* Save Button */}
+      <div className="pt-4 flex gap-4">
         <button
           onClick={handleSave}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg py-5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+          className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold text-lg py-5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
         >
           Save Setup & Continue →
         </button>
-      </div>
-
-      {/* Bottom Help Text */}
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
-          Your API key is used only for this session and is never stored on our servers
-        </p>
+        
+        {config.api_key && (
+          <button
+            onClick={handleClear}
+            className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl"
+          >
+            Clear
+          </button>
+        )}
       </div>
     </div>
-  );
+    </div>
+);
 }
-
 export default AIConfig;

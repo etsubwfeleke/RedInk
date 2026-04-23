@@ -1,7 +1,11 @@
 import json
 from typing import Dict, Any
+import logging
 from services.llm_service import LLMService
 from models.schemas import ProposedGrade
+
+
+logger = logging.getLogger(__name__)
 
 
 class GradingAgent:
@@ -84,6 +88,7 @@ Evaluate the student work for each criterion. Be fair but thorough. Provide spec
 Return the structured JSON with proposed grades."""
         
         try:
+            logger.info("Starting grading for %d rubric criteria", len(rubric_analysis.criteria))
             response = await LLMService.call_llm(
                 config=config,
                 system_prompt=GradingAgent.SYSTEM_PROMPT,
@@ -104,6 +109,7 @@ Return the structured JSON with proposed grades."""
             
             # Convert to Pydantic models
             proposed_grades = [ProposedGrade(**g) for g in grades_dict["proposed_grades"]]
+            logger.info("Grading complete with %d proposed grades", len(proposed_grades))
             
             return {
                 **state,
@@ -112,6 +118,7 @@ Return the structured JSON with proposed grades."""
             }
             
         except Exception as e:
+            logger.exception("Grading failed")
             return {
                 **state,
                 "error": f"Grading failed: {str(e)}",

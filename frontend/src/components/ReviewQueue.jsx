@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Icon } from 'semantic-ui-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -73,7 +74,9 @@ function ReviewQueue({ workflowId, onComplete }) {
       <div className="flex items-center justify-center min-h-screen p-8">
         <div className="text-center max-w-2xl">
           <div className="paper-bg rounded-2xl shadow-lg p-12 border-2 border-gray-200">
-            <div className="text-8xl mb-6">✏️</div>
+            <div className="mb-6">
+              <Icon name="pencil" size="massive" />
+            </div>
             <h3 className="text-4xl font-bold text-gray-900 mb-4 redink-font text-red-600">
               No Grades to Review
             </h3>
@@ -82,15 +85,21 @@ function ReviewQueue({ workflowId, onComplete }) {
             </p>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div className="paper-bg p-4 rounded-lg border-2 border-gray-200">
-                <div className="text-3xl mb-2">1️⃣</div>
+                <div className="mb-2">
+                  <Icon name="circled 1" size="huge" />
+                </div>
                 <p className="font-semibold text-gray-700">Configure AI</p>
               </div>
               <div className="paper-bg p-4 rounded-lg border-2 border-gray-200">
-                <div className="text-3xl mb-2">2️⃣</div>
+                <div className="mb-2">
+                  <Icon name="circled 2" size="huge" />
+                </div>
                 <p className="font-semibold text-gray-700">Upload Files</p>
               </div>
               <div className="paper-bg p-4 rounded-lg border-2 border-red-300 bg-red-50">
-                <div className="text-3xl mb-2">3️⃣</div>
+                <div className="mb-2">
+                  <Icon name="circled 3" size="huge" />
+                </div>
                 <p className="font-semibold text-red-700">Review Here</p>
               </div>
             </div>
@@ -103,7 +112,7 @@ function ReviewQueue({ workflowId, onComplete }) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="text-6xl mb-4 animate-spin">⚙️</div>
+          <Icon name="spinner" loading size="massive" style={{ marginBottom: '1rem' }} />
           <p className="text-xl text-gray-600">AI is analyzing the work...</p>
           <p className="text-sm text-gray-500 mt-2">This may take 30-60 seconds</p>
         </div>
@@ -211,7 +220,7 @@ function ReviewQueue({ workflowId, onComplete }) {
 
               {isAdjusted && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-red-700 font-semibold">
-                  <span>✏️</span>
+                  <Icon name="pencil" size="small" />
                   <span>You adjusted this grade</span>
                 </div>
               )}
@@ -222,8 +231,9 @@ function ReviewQueue({ workflowId, onComplete }) {
 
       {/* TA Notes */}
       <div className="paper-bg rounded-xl shadow-md p-6 mb-8">
-        <label className="block text-lg font-bold text-gray-900 mb-3">
-          📝 Add Notes (Optional)
+        <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <Icon name="file outline" />
+          Add Notes (Optional)
         </label>
         <textarea
           value={notes}
@@ -249,7 +259,7 @@ function ReviewQueue({ workflowId, onComplete }) {
         >
           {submitting ? (
             <span className="flex items-center justify-center gap-3">
-              <span className="animate-spin">⚙️</span>
+              <Icon name="spinner" loading />
               Generating Feedback...
             </span>
           ) : (

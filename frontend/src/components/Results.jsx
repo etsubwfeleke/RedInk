@@ -1,9 +1,14 @@
 import React from 'react';
+import { Icon } from 'semantic-ui-react';
 
 function Results({ result, onNewGrading }) {
-  const totalScore = result.final_grades?.reduce((sum, g) => sum + g.points_awarded, 0) || 0;
-  const maxScore = result.final_grades?.reduce((sum, g) => sum + g.max_points, 0) || 0;
-  const percentage = ((totalScore / maxScore) * 100).toFixed(1);
+  console.log("=== RESULTS DATA ===");
+  console.log(JSON.stringify(result, null, 2));
+  console.log("=== END ===");
+// Use result.total_score and result.max_total_score from backend
+const totalScore = result.total_score || 0;
+const maxScore = result.max_total_score || 0;
+const percentage = result.percentage?.toFixed(1) || '0.0';
 
   const getGradeColor = (percent) => {
     if (percent >= 90) return 'text-green-600';
@@ -89,7 +94,7 @@ function Results({ result, onNewGrading }) {
       {result.overall_comments && (
         <div className="paper-bg rounded-xl shadow-md p-8 mb-8 border-l-4 border-yellow-400">
           <div className="flex items-start gap-3 mb-4">
-            <span className="text-3xl">💬</span>
+            <Icon name="comment outline" size="large" />
             <h3 className="text-2xl font-bold text-gray-900">Overall Feedback</h3>
           </div>
           <div className="prose max-w-none">
@@ -107,8 +112,8 @@ function Results({ result, onNewGrading }) {
         </h3>
 
         <div className="space-y-4">
-          {result.final_grades?.map((grade, idx) => {
-            const gradePercent = ((grade.points_awarded / grade.max_points) * 100).toFixed(0);
+          {result.grades?.map((grade, idx) => {
+            const gradePercent = ((grade.score / grade.max_points) * 100).toFixed(0);
             
             return (
               <div
@@ -128,7 +133,7 @@ function Results({ result, onNewGrading }) {
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-bold text-red-600">
-                      {grade.points_awarded}
+                      {grade.score}
                     </div>
                     <div className="text-sm text-gray-500">points</div>
                   </div>
@@ -150,10 +155,10 @@ function Results({ result, onNewGrading }) {
                 </div>
 
                 {/* Reasoning */}
-                {grade.justification && (
+                {grade.reasoning && (
                   <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
                     <p className="text-sm font-semibold text-blue-900 mb-1">Reasoning:</p>
-                    <p className="text-sm text-blue-800">{grade.justification}</p>
+                    <p className="text-sm text-blue-800">{grade.reasoning}</p>
                   </div>
                 )}
 
@@ -177,32 +182,58 @@ function Results({ result, onNewGrading }) {
             <span className="text-red-600 redink-font">Detailed Feedback</span>
           </h3>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {result.feedback.map((item, idx) => (
               <div
                 key={idx}
                 className="paper-bg rounded-xl shadow-md p-6 border-l-4 border-purple-400"
               >
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">
-                    {item.type === 'strength' ? '💪' : 
-                     item.type === 'improvement' ? '📈' : 
-                     '💡'}
-                  </span>
-                  <div className="flex-1">
+                <h4 className="text-xl font-bold text-gray-900 mb-4">{item.criterion_name}</h4>
+                
+                {/* Strengths */}
+                {item.strengths && item.strengths.length > 0 && (
+                  <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        item.type === 'strength' ? 'bg-green-100 text-green-800' :
-                        item.type === 'improvement' ? 'bg-orange-100 text-orange-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                      </span>
-                      <span className="font-semibold text-gray-700">{item.criterion}</span>
+                      <Icon name="winner" color="green" />
+                      <span className="font-semibold text-green-800">Strengths</span>
                     </div>
-                    <p className="text-gray-700 leading-relaxed">{item.comment}</p>
+                    <ul className="list-disc list-inside space-y-1 ml-8 text-gray-700">
+                      {item.strengths.map((strength, i) => (
+                        <li key={i}>{strength}</li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
+                )}
+
+                {/* Areas for Improvement */}
+                {item.areas_for_improvement && item.areas_for_improvement.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon name="chart line" color="orange" />
+                      <span className="font-semibold text-orange-800">Areas for Improvement</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 ml-8 text-gray-700">
+                      {item.areas_for_improvement.map((area, i) => (
+                        <li key={i}>{area}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Specific Suggestions */}
+                {item.specific_suggestions && item.specific_suggestions.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon name="lightbulb outline" color="blue" />
+                      <span className="font-semibold text-blue-800">Suggestions</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 ml-8 text-gray-700">
+                      {item.specific_suggestions.map((suggestion, i) => (
+                        <li key={i}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -230,9 +261,9 @@ Overall Feedback:
 ${result.overall_comments}
 
 Detailed Grades:
-${result.final_grades?.map(g => `
-${g.criterion_name}: ${g.points_awarded} / ${g.max_points}
-${g.justification}
+${result.grades?.map(g => `
+${g.criterion_name}: ${g.score} / ${g.max_points}
+${g.reasoning}
 `).join('\n')}
             `.trim();
             
@@ -243,9 +274,10 @@ ${g.justification}
             a.download = `grade-report-${Date.now()}.txt`;
             a.click();
           }}
-          className="px-8 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-5 rounded-xl transition-all"
+          className="px-8 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-5 rounded-xl transition-all flex items-center gap-2"
         >
-          📥 Export Report
+          <Icon name="download" />
+          Export Report
         </button>
       </div>
 
@@ -253,7 +285,7 @@ ${g.justification}
       <div className="mt-8 text-center">
         <div className="inline-block paper-bg px-6 py-3 rounded-full border-2 border-green-400">
           <span className="text-green-700 font-semibold flex items-center gap-2">
-            <span className="text-xl">✓</span>
+            <Icon name="check circle" color="green" />
             Grading saved successfully!
           </span>
         </div>

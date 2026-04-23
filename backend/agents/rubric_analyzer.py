@@ -1,7 +1,11 @@
 import json
 from typing import Dict, Any
+import logging
 from services.llm_service import LLMService
 from models.schemas import RubricAnalysis, RubricCriterion
+
+
+logger = logging.getLogger(__name__)
 
 
 class RubricAnalyzerAgent:
@@ -52,20 +56,20 @@ RUBRIC:
 Parse this rubric completely and return the structured JSON analysis."""
         
         try:
-            print("=== CALLING RUBRIC ANALYZER ===")
-            print(f"Provider: {config.llm_provider}")
-            print(f"API Key present: {bool(config.api_key)}")
-            print(f"Rubric content length: {len(rubric_content)}")
+            logger.info("Starting rubric analysis")
+            logger.debug(
+                "Rubric analyzer config provider=%s api_key_present=%s rubric_content_len=%d",
+                config.llm_provider,
+                bool(config.api_key),
+                len(rubric_content),
+            )
             
             response = await LLMService.call_llm(
                 config=config,
                 system_prompt=RubricAnalyzerAgent.SYSTEM_PROMPT,
                 user_prompt=user_prompt
             )
-            
-            print("=== RUBRIC ANALYZER - RAW RESPONSE ===")
-            print(response)
-            print("=== END RESPONSE ===")
+            logger.debug("Rubric analyzer raw response length=%d", len(response))
             
             # Parse JSON response
             # Remove markdown code blocks if present
@@ -87,6 +91,7 @@ Parse this rubric completely and return the structured JSON analysis."""
                 total_points=analysis_dict["total_points"],
                 grading_guidelines=analysis_dict["grading_guidelines"]
             )
+            logger.info("Rubric analysis complete with %d criteria", len(criteria))
             
             return {
                 **state,
@@ -95,11 +100,7 @@ Parse this rubric completely and return the structured JSON analysis."""
             }
             
         except Exception as e:
-            print("=== RUBRIC ANALYZER EXCEPTION ===")
-            print(f"Error: {str(e)}")
-            import traceback
-            print(traceback.format_exc())
-            print("=== END EXCEPTION ===")
+            logger.exception("Rubric analysis failed")
     
             return {
                 **state,

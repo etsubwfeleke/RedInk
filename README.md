@@ -1,24 +1,38 @@
-# Multi-Agent Grading Assistant
+# RedInk - Multi-Agent Grading Assistant
 
-An AI-powered grading system that uses multiple specialized agents to evaluate student work with human-in-the-loop oversight.
+[![Live Demo](https://img.shields.io/badge/demo-live-success)](https://redink-frontend-25mj4tmsxa-uc.a.run.app/)
+[![Built with FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://reactjs.org/)
 
-## 🎯 Overview
+**[Try RedInk Live](https://redink-frontend-25mj4tmsxa-uc.a.run.app/)**
 
-This system demonstrates collaborative multi-agent architecture where specialized AI agents work together to:
-1. Parse and understand grading rubrics
-2. Analyze exemplary work to set standards
-3. Evaluate student submissions
-4. Generate constructive feedback
+An AI-powered grading system that uses multiple specialized agents to evaluate student work with human-in-the-loop oversight. RedInk combines the analytical capabilities of large language models with the critical judgment of teaching assistants to deliver consistent, constructive feedback at scale.
 
-**Key Feature:** Human-in-the-loop review ensures AI grades are validated by teaching assistants before final feedback is generated.
+---
 
-## 🏗️ Architecture
+## Overview
 
-### Multi-Agent System
+RedInk transforms the grading workflow by automating the analytical heavy lifting while keeping human judgment at the center. The system:
+
+- **Understands** complex grading rubrics across multiple formats (PDF, DOCX, Markdown, plain text)
+- **Learns** from exemplary student work to establish grading standards
+- **Evaluates** submissions with detailed reasoning and evidence
+- **Generates** constructive, actionable feedback tailored to each student
+
+**Key Innovation:** Every grade passes through a mandatory human review checkpoint before feedback is finalized, ensuring AI suggestions are validated by teaching assistants.
+
+---
+
+## Architecture
+
+### Multi-Agent Collaboration
+
+RedInk employs a sequential multi-agent architecture where specialized AI agents work together through a shared state:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    LangGraph Orchestrator                    │
+│                 (Workflow State Management)                  │
 └─────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -27,7 +41,12 @@ This system demonstrates collaborative multi-agent architecture where specialize
 ┌──────────────┐    ┌──────────────┐      ┌──────────────┐
 │   Rubric     │    │   Standard   │      │   Grading    │
 │   Analyzer   │───▶│    Setter    │─────▶│    Agent     │
-│    Agent     │    │    Agent     │      │              │
+│              │    │              │      │              │
+│ • Parse      │    │ • Analyze    │      │ • Evaluate   │
+│   criteria   │    │   golden     │      │ • Score      │
+│ • Extract    │    │   examples   │      │ • Provide    │
+│   point      │    │ • Identify   │      │   evidence   │
+│   values     │    │   patterns   │      │              │
 └──────────────┘    └──────────────┘      └──────────────┘
                                                   │
                                                   ▼
@@ -35,224 +54,333 @@ This system demonstrates collaborative multi-agent architecture where specialize
                                           │    Human     │
                                           │   Review     │
                                           │  Checkpoint  │
+                                          │              │
+                                          │ TA validates │
+                                          │ or adjusts   │
                                           └──────────────┘
                                                   │
                                                   ▼
                                           ┌──────────────┐
                                           │  Feedback    │
                                           │ Synthesizer  │
-                                          │    Agent     │
+                                          │              │
+                                          │ • Strengths  │
+                                          │ • Areas to   │
+                                          │   improve    │
+                                          │ • Next steps │
                                           └──────────────┘
 ```
 
-### Agent Responsibilities
+### Agent Specialization
 
-1. **Rubric Analyzer Agent**
-   - Parses grading rubrics
-   - Extracts criteria, point values, requirements
-   - Identifies grading guidelines
+Each agent has a focused responsibility:
 
-2. **Standard Setter Agent**
-   - Analyzes golden/reference assignments
-   - Identifies characteristics of excellence
-   - Sets comparison baseline for each criterion
+| Agent | Purpose | Output |
+|-------|---------|--------|
+| **Rubric Analyzer** | Parses grading rubrics and extracts structured criteria | Criterion list with point values, requirements, and evaluation guidelines |
+| **Standard Setter** | Analyzes reference/golden assignments to establish quality benchmarks | Patterns of excellence for each criterion |
+| **Grading Agent** | Evaluates student work against rubric criteria | Proposed scores with detailed reasoning and evidence |
+| **Feedback Synthesizer** | Generates constructive, actionable feedback | Personalized feedback highlighting strengths and improvement areas |
 
-3. **Grading Agent**
-   - Evaluates student work against rubric
-   - Proposes scores with detailed reasoning
-   - Provides evidence from student submissions
-   - Suggests improvements
+### Communication & State
 
-4. **Feedback Synthesizer Agent**
-   - Generates constructive feedback
-   - Acknowledges strengths
-   - Identifies areas for improvement
-   - Provides actionable suggestions
+- **Shared State**: Agents communicate via a LangGraph-managed state dictionary
+- **Sequential Execution**: Each agent builds on the output of previous agents
+- **Checkpoint System**: Workflow pauses for human review before finalization
+- **Error Handling**: Failed agents gracefully degrade without breaking the pipeline
 
-### Communication Pattern
+---
 
-- **Sequential execution** with state sharing
-- **Message passing** through LangGraph state
-- **Human-in-the-loop** checkpoint between grading and feedback
-- **Orchestration layer** manages workflow and error handling
-
-## 🔒 Security & Guardrails
+## Security & Safety
 
 ### Input Validation
-- File type restrictions (PDF, DOCX, MD, TXT only)
-- File size limits enforced
-- Base64 encoding validation
-- API key format validation
+
+```python
+File type restrictions: PDF, DOCX, MD, TXT only
+File size limits: 10MB max per file
+Base64 encoding validation
+API key format verification
+Malformed input rejection
+```
 
 ### LLM Usage Guardrails
-- **Temperature = 0** for consistent, deterministic outputs
-- **Structured JSON outputs** with schema validation
-- **Role constraints**: Each agent has specific system prompts
-- **Output filtering**: JSON parsing with error handling
-- **Fallback mechanisms**: Error states trigger safe defaults
 
-### Data Handling
-- **No persistent storage** of student data or API keys
-- **In-memory state** only during active sessions
-- **Session isolation** via unique workflow IDs
-- **Automatic cleanup** after grading completion
-- **PII awareness**: No logging of student work
+- **Temperature = 0**: Deterministic, consistent outputs across runs
+- **Structured JSON outputs**: Schema-validated responses prevent hallucinations
+- **Role-specific prompts**: Each agent has constrained instructions
+- **Output validation**: JSON parsing with fallback error handling
+- **Score boundaries**: Prevents scores exceeding rubric maximums
 
-### Agent Safety Measures
-- **No autonomous actions**: Human review required before finalization
-- **Score validation**: Prevents scores exceeding max points
-- **Reasoning required**: All grades must include justification
-- **Audit trail**: TA notes captured for review
-- **Graceful degradation**: System continues if optional components fail
-
-## 🛠️ Implementation
-
-### Technology Stack
-
-**Backend:**
-- FastAPI (REST API)
-- LangGraph (Agent orchestration)
-- LangChain (LLM abstraction)
-- Pydantic (Data validation)
-- PyPDF2, python-docx (File processing)
-
-**Frontend:**
-- React 18
-- Tailwind CSS
-- Axios (HTTP client)
-- Vite (Build tool)
-
-**Deployment:**
-- Docker (Containerization)
-- Google Cloud Run (Serverless hosting)
-- Cloud Build (CI/CD)
-
-### Agent Instantiation
-
-Agents are defined as async functions within LangGraph:
+### Data Privacy
 
 ```python
-class RubricAnalyzerAgent:
-    @staticmethod
-    async def analyze(state: Dict[str, Any]) -> Dict[str, Any]:
-        # Parse rubric, extract criteria
-        # Return updated state
+No persistent storage of student data
+No logging of submission content
+No API key retention
+In-memory processing only
+Session isolation via unique workflow IDs
+Automatic cleanup after grading
 ```
 
-### Coordination & Termination
+### Human-in-the-Loop Safety
 
-- **LangGraph StateGraph** manages execution flow
-- **Conditional edges** route based on state
-- **Error states** trigger workflow termination
-- **END node** signals completion
-- **Workflow IDs** enable session management
+- **Mandatory review**: No grades finalized without TA approval
+- **Full transparency**: All AI reasoning visible to reviewers
+- **Override capability**: TAs can modify any score or comment
+- **Audit trail**: TA notes captured for accountability
+- **Graceful degradation**: Optional components (e.g., golden examples) can fail safely
 
-### Error Handling
+---
 
-```python
-try:
-    response = await LLMService.call_llm(...)
-    # Process response
-except Exception as e:
-    return {
-        **state,
-        "error": f"Agent failed: {str(e)}",
-        "current_step": "error"
-    }
-```
+## Technology Stack
 
-### Evaluation & Testing
+### Backend
 
-- **Schema validation** ensures correct data structures
-- **Unit tests** for file processing (can be added)
-- **Integration tests** for full workflow (can be added)
-- **Manual testing** with real rubrics and assignments
+- **[FastAPI](https://fastapi.tiangolo.com/)**: High-performance async REST API
+- **[LangGraph](https://github.com/langchain-ai/langgraph)**: Agent orchestration and state management
+- **[LangChain](https://www.langchain.com/)**: LLM abstraction layer
+- **[Pydantic](https://docs.pydantic.dev/)**: Data validation and settings management
+- **PyPDF2 / python-docx**: Document parsing for rubrics and submissions
 
-## 🚀 Deployment
+### Frontend
+
+- **[React 18](https://react.dev/)**: Component-based UI framework
+- **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first styling
+- **[Axios](https://axios-http.com/)**: HTTP client for API communication
+- **[Vite](https://vitejs.dev/)**: Lightning-fast development and build tool
+
+### Infrastructure
+
+- **[Google Cloud Run](https://cloud.google.com/run)**: Serverless container deployment
+- **[Cloud Build](https://cloud.google.com/build)**: Automated CI/CD pipeline
+- **[Docker](https://www.docker.com/)**: Containerization for consistent environments
+
+### LLM Support
+
+RedInk supports multiple LLM providers:
+
+- **Anthropic Claude**: Recommended for complex reasoning tasks (Sonnet 4.5, Opus 4.6)
+- **OpenAI GPT**: Alternative option (GPT-4, GPT-4 Turbo)
+- **Configurable**: Users select provider and model at runtime
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- Google Cloud account
-- gcloud CLI installed
-- Docker installed (for local testing)
+- **Node.js** 18+ and npm
+- **Python** 3.9+
+- **Docker** (optional, for containerized deployment)
+- **Google Cloud CLI** (for deployment to Cloud Run)
 
-### Quick Start
+### Local Development
 
-1. **Clone and setup:**
+#### 1. Clone the Repository
+
 ```bash
-git clone <repository-url>
-cd grading-assistant
+git clone https://github.com/yourusername/redink-grading-assistant.git
+cd redink-grading-assistant
 ```
 
-2. **Local development:**
+#### 2. Backend Setup
+
 ```bash
-# Backend
 cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python main.py
+```
 
-# Frontend (new terminal)
+The backend API will be available at `http://localhost:8080`
+
+#### 3. Frontend Setup
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-3. **Deploy to Google Cloud Run:**
+The frontend will be available at `http://localhost:5173`
+
+#### 4. Environment Configuration
+
+Create a `.env` file in the frontend directory:
+
+```env
+VITE_API_URL=http://localhost:8080
+```
+
+### Production Deployment
+
+#### Deploy to Google Cloud Run
+
 ```bash
+# Set your project ID
 export GCP_PROJECT_ID="your-project-id"
 export GCP_REGION="us-central1"
+
+# Run deployment script
 ./deploy.sh
 ```
 
-### Environment Variables
+The script will:
+1. Build Docker containers for frontend and backend
+2. Push images to Google Container Registry
+3. Deploy services to Cloud Run
+4. Configure networking and environment variables
 
-- `VITE_API_URL`: Backend API URL (frontend)
-- `PORT`: Server port (default: 8080)
+#### Manual Deployment
 
-## 📊 Use of AI/LLMs
+**Backend:**
+```bash
+gcloud builds submit --config=backend/cloudbuild.yaml backend/
+gcloud run deploy redink-backend \
+  --image gcr.io/$GCP_PROJECT_ID/redink-backend:latest \
+  --platform managed \
+  --region $GCP_REGION \
+  --allow-unauthenticated
+```
 
-### How LLMs Are Used
+**Frontend:**
+```bash
+gcloud builds submit --config=frontend/cloudbuild.yaml frontend/
+gcloud run deploy redink-frontend \
+  --image gcr.io/$GCP_PROJECT_ID/redink-frontend:latest \
+  --platform managed \
+  --region $GCP_REGION \
+  --allow-unauthenticated \
+  --set-env-vars VITE_API_URL=<backend-url>
+```
 
-1. **Rubric Analysis**: Parse complex grading criteria from documents
-2. **Standard Setting**: Identify patterns of excellence in reference work
-3. **Grading**: Evaluate student work with detailed reasoning
-4. **Feedback Generation**: Create constructive, actionable feedback
+---
 
-### LLM Provider Support
+## Usage
 
-- **Claude (Anthropic)**: Recommended for complex reasoning
-- **GPT-4 (OpenAI)**: Alternative option
-- **Configurable**: Users select provider and model
+### Step-by-Step Grading Workflow
 
-### Agent Collaboration
+1. **Upload Rubric**: Provide the grading criteria (PDF, DOCX, MD, or TXT)
+2. **Upload Golden Example** (Optional): Submit reference work to calibrate standards
+3. **Select LLM Provider**: Choose between Anthropic Claude or OpenAI GPT
+4. **Enter API Key**: Provide your LLM provider API key (not stored)
+5. **Upload Student Submission**: Provide the work to be graded
+6. **AI Analysis**: Agents process rubric, analyze submission, propose grades
+7. **Human Review**: Review AI-proposed scores and reasoning
+8. **Adjust & Approve**: Modify scores if needed, add TA notes
+9. **Generate Feedback**: System creates personalized feedback for the student
 
-Agents **don't negotiate** - they operate sequentially with clear handoffs:
-- Each agent enhances the shared state
-- Downstream agents use outputs from upstream agents
-- Human review checkpoint validates AI decisions
+### Example Use Cases
 
-### Autonomy vs. Control
+- **Coding Assignments**: Evaluate code quality, functionality, documentation
+- **Data Visualization Projects**: Assess design choices, clarity, insights
+- **Written Reports**: Grade structure, argumentation, evidence usage
+- **Problem Sets**: Check correctness, approach, explanation quality
 
-**Design Philosophy: Augmentation, not Automation**
+---
 
-- **Controlled autonomy**: Agents propose, humans decide
-- **Transparency**: All reasoning visible to TA
-- **Override capability**: TA can adjust any score
-- **Final authority**: Human review required for finalization
+## How AI is Used
 
-## 📝 Real-World Application
+### LLM Role in Each Agent
 
-This system is designed for:
-- **TAs** grading coding assignments, data viz projects, reports
-- **Instructors** providing consistent feedback at scale
-- **Students** receiving detailed, actionable feedback
+| Agent | LLM Task | Why AI Helps |
+|-------|----------|--------------|
+| **Rubric Analyzer** | Extract criteria from unstructured text | Handles diverse rubric formats (tables, bullets, prose) |
+| **Standard Setter** | Identify excellence patterns in reference work | Recognizes quality indicators humans might miss |
+| **Grading Agent** | Evaluate against criteria with evidence | Consistent application of standards across submissions |
+| **Feedback Synthesizer** | Generate constructive, tailored feedback | Personalized tone and actionable suggestions |
 
-**Not a replacement for human judgment** - a tool to make grading more efficient and consistent.
+### Transparency & Explainability
 
-## 📄 License
+Every AI decision includes:
+- **Reasoning**: Why a score was assigned
+- **Evidence**: Direct quotes/references from student work
+- **Improvement suggestions**: Specific, actionable next steps
 
-MIT License (for demo purposes)
+TAs see the complete thought process, not just final scores.
 
-## 👤 Author
+### Limitations & Design Choices
 
-Etsub Feleke - Junior FDE Candidate
+**What RedInk Does NOT Do:**
+- Make final grading decisions autonomously
+- Store or train on student data
+- Provide feedback without human approval
+- Replace instructor judgment on subjective criteria
+
+**Design Philosophy:**
+> "Augmentation, not automation. AI proposes, humans decide."
+
+---
+
+## Testing & Validation
+
+### Schema Validation
+
+All agent outputs are validated against Pydantic schemas:
+
+```python
+class GradingResult(BaseModel):
+    criterion: str
+    score: float
+    max_score: float
+    reasoning: str
+    evidence: List[str]
+```
+
+Invalid outputs trigger error states and graceful degradation.
+
+### Error Handling
+
+```python
+try:
+    response = await agent.process(state)
+    validate_schema(response)
+    return updated_state
+except ValidationError as e:
+    return error_state(f"Schema validation failed: {e}")
+except Exception as e:
+    return error_state(f"Agent error: {e}")
+```
+
+### Future Testing Improvements
+
+- [ ] Unit tests for file parsing logic
+- [ ] Integration tests for full workflow
+- [ ] Load testing for concurrent grading sessions
+- [ ] Regression tests for schema changes
+
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Code Style
+
+- **Python**: Follow PEP 8, use type hints
+- **JavaScript**: ESLint + Prettier configuration included
+- **Commits**: Use conventional commit messages
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Technology Stack
+
+- **LangChain & LangGraph**: For the agent orchestration framework
+- **Anthropic & OpenAI**: For providing powerful LLM APIs
+- **FastAPI**: For the elegant async Python framework
+- **React & Tailwind**: For the modern frontend stack
+
+---

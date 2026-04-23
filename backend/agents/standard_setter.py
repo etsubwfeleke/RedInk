@@ -1,7 +1,11 @@
 import json
 from typing import Dict, Any
+import logging
 from services.llm_service import LLMService
 from models.schemas import StandardAnalysis
+
+
+logger = logging.getLogger(__name__)
 
 
 class StandardSetterAgent:
@@ -39,6 +43,7 @@ Output your analysis as JSON in the following format:
         """
         # If no golden assignment provided, skip this step
         if not state.get("golden_content"):
+            logger.info("Skipping standard setting because no golden assignment was provided")
             return {
                 **state,
                 "standard_analysis": None,
@@ -51,6 +56,7 @@ Output your analysis as JSON in the following format:
         
         # Check if rubric analysis exists
         if not rubric_analysis:
+            logger.error("Standard setting cannot proceed: missing rubric analysis")
             return {
                 **state,
                 "error": "Rubric analysis is missing - rubric analyzer may have failed",
@@ -75,6 +81,7 @@ For each criterion, identify what makes this submission excellent and what eleme
 Return the structured JSON analysis."""
         
         try:
+            logger.info("Starting standard setting from golden assignment")
             response = await LLMService.call_llm(
                 config=config,
                 system_prompt=StandardSetterAgent.SYSTEM_PROMPT,
@@ -95,6 +102,7 @@ Return the structured JSON analysis."""
             
             # Convert to Pydantic models
             standard_analysis = [StandardAnalysis(**s) for s in analysis_dict["standards"]]
+            logger.info("Standard setting complete with %d standards", len(standard_analysis))
             
             return {
                 **state,
@@ -103,6 +111,7 @@ Return the structured JSON analysis."""
             }
             
         except Exception as e:
+            logger.exception("Standard setting failed")
             return {
                 **state,
                 "error": f"Standard setting failed: {str(e)}",

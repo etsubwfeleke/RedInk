@@ -1,9 +1,13 @@
 from typing import Dict, Any, TypedDict
+import logging
 from langgraph.graph import StateGraph, END
 from agents.rubric_analyzer import RubricAnalyzerAgent
 from agents.standard_setter import StandardSetterAgent
 from agents.grading_agent import GradingAgent
 from agents.feedback_synthesizer import FeedbackSynthesizerAgent
+
+
+logger = logging.getLogger(__name__)
 
 
 class GradingWorkflowState(TypedDict):
@@ -26,10 +30,12 @@ class GradingWorkflow:
     """LangGraph workflow for multi-agent grading system"""
     
     def __init__(self):
+        logger.debug("Initializing grading workflow")
         self.workflow = self._build_workflow()
     
     def _build_workflow(self) -> StateGraph:
         """Build the LangGraph workflow"""
+        logger.debug("Building LangGraph grading workflow")
         
         # Create the graph
         workflow = StateGraph(GradingWorkflowState)
@@ -58,6 +64,7 @@ class GradingWorkflow:
         In practice, this is where the workflow pauses for human input.
         The actual human review happens in the API endpoint.
         """
+        logger.info("Workflow paused for human review")
         return {
             **state,
             "current_step": "awaiting_human_review"
@@ -71,24 +78,33 @@ class GradingWorkflow:
         from agents.rubric_analyzer import RubricAnalyzerAgent
         from agents.standard_setter import StandardSetterAgent
         from agents.grading_agent import GradingAgent
+
+        logger.info("Running workflow until human review")
         
         # Step 1: Rubric analysis
+        logger.debug("Workflow step: rubric_analyzer")
         state = await RubricAnalyzerAgent.analyze(initial_state)
         if state.get("error"):
+            logger.error("Workflow failed at rubric_analyzer: %s", state.get("error"))
             return state
         
         # Step 2: Standard setting
+        logger.debug("Workflow step: standard_setter")
         state = await StandardSetterAgent.analyze(state)
         if state.get("error"):
+            logger.error("Workflow failed at standard_setter: %s", state.get("error"))
             return state
         
         # Step 3: Grading
+        logger.debug("Workflow step: grading_agent")
         state = await GradingAgent.grade(state)
         if state.get("error"):
+            logger.error("Workflow failed at grading_agent: %s", state.get("error"))
             return state
         
         # Stop here - return state for human review
         state["current_step"] = "awaiting_human_review"
+        logger.info("Workflow reached human review checkpoint")
         return state
     
     async def run_after_human_review(self, state_with_reviews: Dict[str, Any]) -> Dict[str, Any]:
@@ -102,5 +118,10 @@ class GradingWorkflow:
             Final state with feedback
         """
         # Just run feedback synthesizer
+        logger.info("Resuming workflow after human review")
         result = await FeedbackSynthesizerAgent.synthesize(state_with_reviews)
+        if result.get("error"):
+            logger.error("Workflow failed at feedback_synthesizer: %s", result.get("error"))
+        else:
+            logger.info("Workflow completed after human review")
         return result

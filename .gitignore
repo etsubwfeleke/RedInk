@@ -89,6 +89,7 @@ backend/venv/
 frontend/node_modules/
 
 DEPLOYMENT_CHECKLIST.md
+SETUP_GUIDE.md
 PRESENTATION_OUTLINE.md
 local_test.sh
 setup_environment.sh
